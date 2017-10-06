@@ -3,6 +3,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pylab as pl
+from time import time
+from datetime import datetime
 
 def prettyPicture(clf, X_test, y_test):
     x_min = 0.0; x_max = 1.0
@@ -33,7 +35,21 @@ def prettyPicture(clf, X_test, y_test):
     plt.xlabel("bumpiness")
     plt.ylabel("grade")
 
-    plt.savefig("test.png")
+    #hora no arquivo
+    agora_dt = datetime.fromtimestamp(time())
+    ano = agora_dt.year
+    mes = agora_dt.month
+    dia = agora_dt.day
+    hora = agora_dt.hour
+    minuto = agora_dt.minute
+    segundo = agora_dt.second
+
+    nome_arq = "" + str(ano) + str(mes) + str(dia) + "-" + str(hora) +":"+ str(minuto) +":"+ str(segundo) + "-"
+
+    #hora no arquivo
+
+    #plt.savefig("test.png")
+    plt.savefig(nome_arq + "test.png")
 
 import base64
 import json
