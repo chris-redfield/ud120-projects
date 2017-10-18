@@ -66,7 +66,7 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random
 ###############################################################################
 # Compute a PCA (eigenfaces) on the face dataset (treated as unlabeled
 # dataset): unsupervised feature extraction / dimensionality reduction
-n_components = 150
+n_components = 100
 
 print "Extracting the top %d eigenfaces from %d faces" % (n_components, X_train.shape[0])
 t0 = time()
@@ -97,7 +97,8 @@ clf = clf.fit(X_train_pca, y_train)
 print "done in %0.3fs" % (time() - t0)
 print "Best estimator found by grid search:"
 print clf.best_estimator_
-
+print "Best params:"
+print clf.best_params_
 
 ###############################################################################
 # Quantitative evaluation of the model quality on the test set
@@ -110,7 +111,8 @@ print "done in %0.3fs" % (time() - t0)
 print classification_report(y_test, y_pred, target_names=target_names)
 print confusion_matrix(y_test, y_pred, labels=range(n_classes))
 
-
+#print pca.explained_variance_
+#print pca.explained_variance_ratio_
 ###############################################################################
 # Qualitative evaluation of the predictions using matplotlib
 
@@ -143,4 +145,4 @@ plot_gallery(X_test, prediction_titles, h, w)
 eigenface_titles = ["eigenface %d" % i for i in range(eigenfaces.shape[0])]
 plot_gallery(eigenfaces, eigenface_titles, h, w)
 
-pl.show()
+#pl.show()

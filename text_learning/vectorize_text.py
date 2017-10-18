@@ -53,7 +53,7 @@ for name, from_person in [("sara", from_sara), ("chris", from_chris)]:
 
             ### use str.replace() to remove any instances of the words
             ### ["sara", "shackleton", "chris", "germani"]
-            for signature_word in ["sara", "shackleton", "chris", "germani"]:
+            for signature_word in ["sara", "shackleton", "chris", "germani", "sshacklensf","cgermannsf"]:
                 stemmed_mail = stemmed_mail.replace(signature_word,"")
 
             ### append the text to word_data
