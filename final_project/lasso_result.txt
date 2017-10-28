@@ -1,43 +1,42 @@
-features and their coefs:
-feature:  salary
- coef:  7.69143754963e-08
-feature:  to_messages
- coef:  0.0
-feature:  deferral_payments
- coef:  0.0
-feature:  total_payments
- coef:  0.0
-feature:  exercised_stock_options
- coef:  1.92291301627e-08
 feature:  bonus
- coef:  3.90707205362e-08
-feature:  restricted_stock
- coef:  0.0
-feature:  shared_receipt_with_poi
- coef:  1.42266703121e-05
-feature:  restricted_stock_deferred
- coef:  0.0
-feature:  total_stock_value
- coef:  0.0
-feature:  expenses
- coef:  7.53790988867e-07
-feature:  loan_advances
- coef:  0.0
-feature:  from_messages
- coef:  0.0
-feature:  other
- coef:  0.0
-feature:  from_this_person_to_poi
- coef:  0.0
-feature:  director_fees
+ coef:  7.69143754963e-08
+feature:  deferral_payments
  coef:  0.0
 feature:  deferred_income
  coef:  0.0
-feature:  long_term_incentive
- coef:  1.2306492231e-08
-feature:  from_poi_to_this_person
+feature:  director_fees
  coef:  0.0
+feature:  exercised_stock_options
+ coef:  1.92291301627e-08
+feature:  expenses
+ coef:  3.90707205362e-08
 feature:  fraction_from_poi
  coef:  0.0
 feature:  fraction_to_poi
+ coef:  1.42266703121e-05
+feature:  from_messages
+ coef:  0.0
+feature:  from_poi_to_this_person
+ coef:  0.0
+feature:  from_this_person_to_poi
+ coef:  7.53790988867e-07
+feature:  loan_advances
+ coef:  0.0
+feature:  long_term_incentive
+ coef:  0.0
+feature:  other
+ coef:  0.0
+feature:  restricted_stock
+ coef:  0.0
+feature:  restricted_stock_deferred
+ coef:  0.0
+feature:  salary
+ coef:  0.0
+feature:  shared_receipt_with_poi
+ coef:  1.2306492231e-08
+feature:  to_messages
+ coef:  0.0
+feature:  total_payments
+ coef:  0.0
+feature:  total_stock_value
  coef:  0.0

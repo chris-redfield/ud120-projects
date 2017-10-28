@@ -4,48 +4,42 @@ import sys
 import pickle
 sys.path.append("../tools/")
 
-from feature_format import featureFormat, targetFeatureSplit
+from feature_format import featureFormat, targetFeatureSplit, createRelativeFeature
 from tester import dump_classifier_and_data
 from sklearn import cross_validation
 from sklearn.metrics import accuracy_score, precision_score, recall_score
-from sklearn.metrics import classification_report
+from sklearn.feature_selection import SelectPercentile, f_classif
 
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
 
-#all features
-#features_list = ['poi', 'salary', 'to_messages', 'deferral_payments', 'total_payments',
-#                 'exercised_stock_options', 'bonus', 'restricted_stock',
-#                 'shared_receipt_with_poi', 'restricted_stock_deferred',
-#                 'total_stock_value', 'expenses', 'loan_advances', 'from_messages',
-#                 'other', 'from_this_person_to_poi', 'director_fees', 'deferred_income',
-#                 'long_term_incentive', 'from_poi_to_this_person']
+# all features except email_address
+# added the 2 new features, fraction_from_poi and fraction_to_poi
+features_list = ['poi', 'salary', 'to_messages', 'deferral_payments', 'total_payments',
+                 'exercised_stock_options', 'bonus', 'restricted_stock',
+                 'shared_receipt_with_poi', 'restricted_stock_deferred',
+                 'total_stock_value', 'expenses', 'loan_advances', 'from_messages',
+                 'other', 'from_this_person_to_poi', 'director_fees', 'deferred_income',
+                 'long_term_incentive', 'from_poi_to_this_person', 'fraction_from_poi', 'fraction_to_poi']
 
 # features after selection (poi is a label =p)
-#tirei o salario e n adiantou nada
-features_list = ['poi','expenses','loan_advances', 'long_term_incentive','restricted_stock_deferred','bonus']
+features_list = ['poi','bonus', 'exercised_stock_options', 'expenses', 'shared_receipt_with_poi','long_term_incentive','salary']
+
 
 ### Load the dictionary containing the dataset
 with open("final_project_dataset.pkl", "r") as data_file:
     data_dict = pickle.load(data_file)
 
+# Creating new feature
+# Same algorithm as Lesson 12, 4. Vizualizing your new feature
+createRelativeFeature(data_dict)
 
 keys = data_dict.keys()
 
-#get all features again
-#feature_all = data_dict[keys[0]].keys()
-# get the same new features that i got above
-#feature_all = ['poi','bonus','restricted_stock_deferred','expenses','loan_advances', 'long_term_incentive']
-feature_all = ['poi','expenses','loan_advances', 'long_term_incentive','restricted_stock_deferred', 'bonus']
-
-del feature_all[feature_all.index('poi')]
-#del feature_all[feature_all.index('email_address')]
-
 count_pois = 0
 for key in keys:
-    #print data_dict[key]['poi']
-    #if data_dict[key]
+    #print data_dict[key]
 
     if data_dict[key]['poi'] == True:
         count_pois += 1
@@ -55,11 +49,21 @@ print "Total of POIs: " + str(count_pois)
 print "Total of Non POIs: " + str(len(keys) - count_pois)
 print "POI percentage: ", str(round(float(count_pois)/float(len(keys)) * 100,2)) +"%"
 
-#prints all features
-#print feature_all
+
+for feature in features_list:
+    nan_counter = 0
+    zero_counter = 0
+    for key in keys:
+        if data_dict[key][feature] == 'NaN':
+            nan_counter += 1
+        if data_dict[key][feature] == 0:
+            zero_counter += 1
+    print "# of NaNs for feature", feature, ": ", nan_counter
+    print "# of zeros for feature", feature, ": ", zero_counter
+
 
 ### Task 2: Remove outliers
-#removing crazy outlier
+#removing TOTAL data point
 data_dict.pop("TOTAL", 0)
 
 ### Task 3: Create new feature(s)
@@ -70,29 +74,43 @@ my_dataset = data_dict
 data = featureFormat(my_dataset, features_list, sort_keys = True)
 labels, features = targetFeatureSplit(data)
 
+##remove poi label for later
+del features_list[features_list.index('poi')]
 
-
-##Christian doing a little lasso just to see what it gets to us :D
-from time import time
+#LASSO regression
 from sklearn.linear_model import Lasso
 
-
-#LASSO
-print "doing a little lasso just to see what it gets to us :D..."
-t0 = time()
-regression = Lasso()
+print "doing a lasso to see the best features"
+regression = Lasso(positive=True)
 regression.fit(features, labels)
-print "ok just fitted all of it 0_0, this took me about: ", round(time()-t0, 3), "s"
 
 print "features and their coefs: "
-for i in range(len(feature_all)):
-    print "feature: ", feature_all[i]
+for i in range(len(features_list)):
+    print "feature: ", sorted(features_list)[i]
     print " coef: ", regression.coef_[i]
 
 #ENDLASSO
 
+### remove low variance
+#from sklearn.feature_selection import VarianceThreshold
+
+#selector = VarianceThreshold()
+#features = selector.fit_transform(features)
+#ya didnt work so well ...
+### end remove low variance
+
+#the test size was so important omg...
+# optimal found test_size = 70%
 features_train, features_test, labels_train, labels_test = \
-    cross_validation.train_test_split(features, labels, test_size=0.5, random_state=42)
+    cross_validation.train_test_split(features, labels, test_size=0.7, random_state=42)
+
+### Select Percentile
+#selector = SelectPercentile(f_classif,percentile=50)
+#selector.fit(features_train,labels_train)
+#features_train_transformed = selector.transform(features_train)
+#features_test_transformed = selector.transform(features_test)
+
+### END Select Percentile
 
 ### Task 4: Try a varity of classifiers
 ### Please name your classifier clf for easy export below.
@@ -100,57 +118,150 @@ features_train, features_test, labels_train, labels_test = \
 ### you'll need to use Pipelines. For more info:
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
+### Feature scaling
+
+from sklearn import preprocessing
+from sklearn.preprocessing import MinMaxScaler
+
+# try to scale directly
+#features_train_scaled = preprocessing.scale(features_train)
+
+#use minmax to see if there is a relevant difference
+#min_max_scaler = preprocessing.MinMaxScaler()
+#features_train_scaled = min_max_scaler.fit_transform(features_train)
+#well that didnt go so well, gonna rollback this =D
+### end Feature scaling
+
+
+
 # Provided to give you a starting point. Try a variety of classifiers.
 
-
 ### Naive Bayes
-from sklearn.naive_bayes import GaussianNB
-clf = GaussianNB()
-clf.fit(features_train, labels_train)
-pred = clf.predict(features_test)
+#from sklearn.naive_bayes import GaussianNB
+#clf = GaussianNB()
+#clf.fit(features_train, labels_train)
+#pred = clf.predict(features_test)
 
-print'Previsao NB: '
-print(pred)
+#print'Previsao NB: '
+#print(pred)
 
 ### END Naive Bayes
 
+### Decision Tree
+#from sklearn import tree
+#clf = tree.DecisionTreeClassifier(min_samples_split=20)
+#clf.fit(features_train,labels_train)
+#pred = clf.predict(features_test)
+#print'Previsao DT: '
+#print(pred)
+
+### END Decision Tree
+
 ### Random Forest
 
-#from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier
 
-#clf = RandomForestClassifier(n_estimators=50)
+clf = RandomForestClassifier(n_estimators=50)
 
-#clf.fit(features_train, labels_train)
+clf.fit(features_train, labels_train)
 
-#pred = clf.predict(features_test)
-#print "Prediction RF: ", pred
+pred = clf.predict(features_test)
+print "Prediction RF: ", pred
 
-# BEST Performance with all features
-# acc: 0.847222222222
-# precision: 0.4
-# recall: 0.2
+# best performance with all features
+# acc: 0.861386138614
+# precision: 0.5
+# recall: 0.142857142857
 
-# BEST Performance with few features
-# acc: 0.827586206897
-# precision: 0.6
-# recall: 0.272727272727
+
+# best performance with few features (handpicked after lasso )
+#acc: 0.90625
+#precision: 0.75
+#recall: 0.272727272727
+
+# best performance with few features (Select Percentile)
+# acc: 0.833333333333
+# precision: 0.25
+# recall: 0.1
+
 ### End Decision Tree
 
 ### K neighbours
-from sklearn.neighbors import KNeighborsClassifier
+#from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import BaggingClassifier
 
 #clf = KNeighborsClassifier(weights='distance',n_neighbors=10)
 #clf = BaggingClassifier(KNeighborsClassifier(weights='distance',n_neighbors=10))
 
-#clf.fit(features_train, labels_train)
-#pred = clf.predict(features_test)
+#clf.fit(features_train_transformed, labels_train)
+#pred = clf.predict(features_test_transformed)
 
 #print'Previsao KN: '
 #print(pred)
 
 ## K neighbours chuta tudo 0 =D
 ### END K neighbours
+
+### SVM
+
+#from sklearn.svm import SVC
+#clf = SVC()
+
+#clf.fit(features_train_transformed, labels_train)
+#clf.fit(features_train, labels_train)
+
+
+#pred = clf.predict(features_test_transformed)
+#pred = clf.predict(features_test)
+
+
+#print'Previsao KN: '
+#print(pred)
+
+#SVM chutou tudo 0, e nao mudou acc apos reducao de variaveis
+
+### END SVM
+
+
+### adaboost
+
+#from sklearn.ensemble import AdaBoostClassifier
+
+#clf = AdaBoostClassifier(n_estimators=100)
+#clf.fit(features_train, labels_train)
+#pred = clf.predict(features_test)
+
+#print "Adabost preds"
+#print pred
+
+# Resultado com todas as features
+#acc: 0.861386138614
+#precision: 0.5
+#recall: 0.357142857143
+
+#acc: 0.886363636364
+#precision: 0.5
+#recall: 0.2
+
+#acc: 0.861386138614
+#precision: 0.5
+#recall: 0.285714285714
+
+# Resultado com features do christian
+# acc: 0.80487804878
+# precision: 0.461538461538
+# recall: 0.4
+
+# Resultado com 25% das melhores features (select percentile)
+#acc: 0.75
+#precision: 0.1
+#recall: 0.1
+
+### END ab
+
+print "true label - pred"
+for index in range(len(pred)):
+    print labels_test[index],"   -  ",pred[index]
 
 print "acc:"
 print accuracy_score(labels_test,pred)
