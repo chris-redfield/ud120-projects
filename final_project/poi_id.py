@@ -23,7 +23,7 @@ features_list = ['poi', 'salary', 'to_messages', 'deferral_payments', 'total_pay
                  'other', 'from_this_person_to_poi', 'director_fees', 'deferred_income',
                  'long_term_incentive', 'from_poi_to_this_person', 'fraction_from_poi', 'fraction_to_poi']
 
-# features after selection (poi is a label =p)
+# overrides above var with features after selection
 features_list = ['poi','bonus', 'exercised_stock_options', 'expenses', 'shared_receipt_with_poi','long_term_incentive','salary']
 
 
@@ -42,6 +42,7 @@ for key in keys:
     #print data_dict[key]
 
     if data_dict[key]['poi'] == True:
+        print "poi:",key
         count_pois += 1
 
 print "Total of people (DP): " + str(len(keys))
@@ -49,7 +50,7 @@ print "Total of POIs: " + str(count_pois)
 print "Total of Non POIs: " + str(len(keys) - count_pois)
 print "POI percentage: ", str(round(float(count_pois)/float(len(keys)) * 100,2)) +"%"
 
-
+# quick analysis of the features
 for feature in features_list:
     nan_counter = 0
     zero_counter = 0
@@ -61,10 +62,26 @@ for feature in features_list:
     print "# of NaNs for feature", feature, ": ", nan_counter
     print "# of zeros for feature", feature, ": ", zero_counter
 
+#quick analysis of the data points, to see wich are irrelevant
+for key in keys:
+    nan_counter = 0
+    for feature in features_list:
+        if data_dict[key][feature] == 'NaN':
+            nan_counter += 1
+    #more like a rule of thumb, according to the number of features
+    if nan_counter >= (len(features_list) - 1):
+        print "deleting Datapoint", key, " for having only NaN values"
+        #improve performance by removing datapoints with only NaN for this features
+        data_dict.pop(key, 0)
 
 ### Task 2: Remove outliers
-#removing TOTAL data point
+
 data_dict.pop("TOTAL", 0)
+
+#already ripped off above, but just to keep documented
+data_dict.pop("THE TRAVEL AGENCY IN THE PARK", 0)
+data_dict.pop("LOCKHART EUGENE E", 0)
+
 
 ### Task 3: Create new feature(s)
 ### Store to my_dataset for easy export below.
@@ -74,20 +91,20 @@ my_dataset = data_dict
 data = featureFormat(my_dataset, features_list, sort_keys = True)
 labels, features = targetFeatureSplit(data)
 
-##remove poi label for later
-del features_list[features_list.index('poi')]
+##remove poi label for lasso
+#del features_list[features_list.index('poi')]
 
-#LASSO regression
-from sklearn.linear_model import Lasso
+#LASSO regression, uncomment above for this to work, because of 'poi' feature
+#from sklearn.linear_model import Lasso
 
-print "doing a lasso to see the best features"
-regression = Lasso(positive=True)
-regression.fit(features, labels)
+#print "doing a lasso to see the best features"
+#regression = Lasso(positive=True)
+#regression.fit(features, labels)
 
-print "features and their coefs: "
-for i in range(len(features_list)):
-    print "feature: ", sorted(features_list)[i]
-    print " coef: ", regression.coef_[i]
+#print "features and their coefs: "
+#for i in range(len(features_list)):
+#    print "feature: ", sorted(features_list)[i]
+#    print " coef: ", regression.coef_[i]
 
 #ENDLASSO
 
@@ -145,6 +162,13 @@ from sklearn.preprocessing import MinMaxScaler
 #print'Previsao NB: '
 #print(pred)
 
+# performance
+# acc: 0.84375
+# precision: 0.333333333333
+# recall: 0.363636363636
+
+# not possible to use gridsearch because it only has priors parameter
+
 ### END Naive Bayes
 
 ### Decision Tree
@@ -155,18 +179,75 @@ from sklearn.preprocessing import MinMaxScaler
 #print'Previsao DT: '
 #print(pred)
 
+# Performance
+# acc: 0.84375
+# precision: 0.25
+# recall: 0.181818181818
+
+# gridsearch
+
+from sklearn import tree
+#from sklearn import grid_search
+
+#parameters = {'criterion':['entropy','gini'],'splitter':['random','best'],
+#              'min_samples_split':[2,5,10,15,20,40,60], }
+#dt = tree.DecisionTreeClassifier()
+#clf = grid_search.GridSearchCV(dt, parameters)
+#clf.fit(features_train, labels_train)
+#print clf.best_params_
+# prints {'min_samples_split': 10, 'splitter': 'random', 'criterion': 'entropy'}
+# prints {'min_samples_split': 5, 'splitter': 'random', 'criterion': 'entropy'}
+
+#clf = tree.DecisionTreeClassifier(min_samples_split=10, splitter='random', criterion='entropy')
+#clf.fit(features_train,labels_train)
+#pred = clf.predict(features_test)
+#print'Previsao DT + gridsearch: '
+#print(pred)
+
+# Performance
+# acc: 0.885416666667
+# precision:0.5
+# recall: 0.181818181818
+
+# gridsearch
+
 ### END Decision Tree
+
 
 ### Random Forest
 
 from sklearn.ensemble import RandomForestClassifier
 
-clf = RandomForestClassifier(n_estimators=50)
+#clf = RandomForestClassifier(n_estimators=50)
+
+#clf.fit(features_train, labels_train)
+
+#pred = clf.predict(features_test)
+#print "Prediction RF: ", pred
+
+#gridsearch
+
+from sklearn import grid_search
+#parameters = {'n_estimators':[25, 50, 75, 100], 'criterion':['entropy', 'gini'],
+ #             'warm_start':[True,False], 'oob_score':[True,False]}
+#rf = RandomForestClassifier()
+#clf = grid_search.GridSearchCV(rf, parameters)
+#clf.fit(features_train, labels_train)
+#print clf.best_params_
+#prints: {'n_estimators': 25, 'warm_start': False, 'criterion': 'entropy'}
+#prints: {'n_estimators': 75, 'warm_start': True, 'oob_score': False, 'criterion': 'entropy'}
+
+
+clf = RandomForestClassifier(n_estimators=75, criterion='entropy',warm_start=True,oob_score=False)
 
 clf.fit(features_train, labels_train)
 
 pred = clf.predict(features_test)
-print "Prediction RF: ", pred
+print "Prediction RF + gridsearch tuned params: ", pred
+
+
+#gridsearch
+
 
 # best performance with all features
 # acc: 0.861386138614
@@ -174,27 +255,27 @@ print "Prediction RF: ", pred
 # recall: 0.142857142857
 
 
-# best performance with few features (handpicked after lasso )
-#acc: 0.90625
-#precision: 0.75
-#recall: 0.272727272727
+# best performance with few features (handpicked after lasso + gridsearch)
+# acc: 0.916666666667
+# precision: 0.8
+# recall: 0.363636363636
 
 # best performance with few features (Select Percentile)
 # acc: 0.833333333333
 # precision: 0.25
 # recall: 0.1
 
-### End Decision Tree
+### End Random Forest
 
 ### K neighbours
 #from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import BaggingClassifier
+#from sklearn.ensemble import BaggingClassifier
 
 #clf = KNeighborsClassifier(weights='distance',n_neighbors=10)
 #clf = BaggingClassifier(KNeighborsClassifier(weights='distance',n_neighbors=10))
 
-#clf.fit(features_train_transformed, labels_train)
-#pred = clf.predict(features_test_transformed)
+#clf.fit(features_train, labels_train)
+#pred = clf.predict(features_test)
 
 #print'Previsao KN: '
 #print(pred)
@@ -233,6 +314,27 @@ from sklearn.ensemble import BaggingClassifier
 
 #print "Adabost preds"
 #print pred
+
+# gridsearch
+
+from sklearn import grid_search
+#parameters = {'n_estimators':[25,50,75,100], 'learning_rate':[1,2,3], 'algorithm': ['SAMME', 'SAMME.R']}
+#ab = AdaBoostClassifier()
+#clf = grid_search.GridSearchCV(ab, parameters)
+#clf.fit(features_train, labels_train)
+#print clf.best_params_
+#prints {'n_estimators': 25, 'learning_rate': 2, 'algorithm': 'SAMME'}
+
+#clf = AdaBoostClassifier(n_estimators=25, learning_rate=2, algorithm='SAMME')
+#clf.fit(features_train, labels_train)
+#pred = clf.predict(features_test)
+
+#print "Adabost preds + gridsearch"
+#print pred
+
+#lol precision has lowered after the gridsearch @_@
+
+# gridsearch
 
 # Resultado com todas as features
 #acc: 0.861386138614
