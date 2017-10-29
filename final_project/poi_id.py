@@ -16,6 +16,7 @@ from sklearn.feature_selection import SelectPercentile, f_classif
 
 # all features except email_address
 # added the 2 new features, fraction_from_poi and fraction_to_poi
+# still keeping loan_advances and restricted_stock_deferred
 features_list = ['poi', 'salary', 'to_messages', 'deferral_payments', 'total_payments',
                  'exercised_stock_options', 'bonus', 'restricted_stock',
                  'shared_receipt_with_poi', 'restricted_stock_deferred',
