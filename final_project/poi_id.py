@@ -142,11 +142,12 @@ from sklearn import preprocessing
 from sklearn.preprocessing import MinMaxScaler
 
 # try to scale directly
-#features_train_scaled = preprocessing.scale(features_train)
+features_train_scaled = preprocessing.scale(features_train)
 
 #use minmax to see if there is a relevant difference
-#min_max_scaler = preprocessing.MinMaxScaler()
-#features_train_scaled = min_max_scaler.fit_transform(features_train)
+min_max_scaler = preprocessing.MinMaxScaler()
+features_train_scaled = min_max_scaler.fit_transform(features_train)
+features_test_scaled = min_max_scaler.fit_transform(features_test)
 #well that didnt go so well, gonna rollback this =D
 ### end Feature scaling
 
@@ -235,6 +236,7 @@ from sklearn import grid_search
 #clf = grid_search.GridSearchCV(rf, parameters)
 #clf.fit(features_train, labels_train)
 #print clf.best_params_
+
 #prints: {'n_estimators': 25, 'warm_start': False, 'criterion': 'entropy'}
 #prints: {'n_estimators': 75, 'warm_start': True, 'oob_score': False, 'criterion': 'entropy'}
 
@@ -244,6 +246,11 @@ clf = RandomForestClassifier(n_estimators=75, criterion='entropy',warm_start=Tru
 clf.fit(features_train, labels_train)
 
 pred = clf.predict(features_test)
+
+# test just to see scaling being ineffective in trees :D
+#clf.fit(features_train_scaled, labels_train)
+#pred = clf.predict(features_test_scaled)
+
 print "Prediction RF + gridsearch tuned params: ", pred
 
 
@@ -275,8 +282,8 @@ print "Prediction RF + gridsearch tuned params: ", pred
 #clf = KNeighborsClassifier(weights='distance',n_neighbors=10)
 #clf = BaggingClassifier(KNeighborsClassifier(weights='distance',n_neighbors=10))
 
-#clf.fit(features_train, labels_train)
-#pred = clf.predict(features_test)
+#clf.fit(features_train_scaled, labels_train)
+#pred = clf.predict(features_test_scaled)
 
 #print'Previsao KN: '
 #print(pred)
@@ -289,11 +296,11 @@ print "Prediction RF + gridsearch tuned params: ", pred
 #from sklearn.svm import SVC
 #clf = SVC()
 
-#clf.fit(features_train_transformed, labels_train)
+#clf.fit(features_train_scaled, labels_train)
 #clf.fit(features_train, labels_train)
 
 
-#pred = clf.predict(features_test_transformed)
+#pred = clf.predict(features_test_scaled)
 #pred = clf.predict(features_test)
 
 
