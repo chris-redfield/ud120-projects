@@ -26,7 +26,6 @@ keys = data_dict.keys()
 count_pois = 0
 for key in keys:
     if data_dict[key]['poi'] == True:
-        print "poi:",key
         count_pois += 1
 
 print "Total of people (DP): " + str(len(keys))
